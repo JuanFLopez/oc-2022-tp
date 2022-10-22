@@ -66,13 +66,13 @@ TCiudad *cargar_ciudades(const char *entrada, float *actual_x, float *actual_y, 
         printf("No existe el archivo %s\n", entrada);
         return NULL;
     }
-    if(fscanf(f, "%f;%f", actual_x, actual_y) != 2){
+    if(fscanf(f, " %f;%f ", actual_x, actual_y) != 2){
         printf("Se esperaba la posicion actual como primera linea en el archivo %s\n", entrada);
     }
     else{
         *cantidad = 0;
         while(!feof(f)){
-            if(fscanf(f, "%999[^;];%f;%f", nombre, &pos_x, &pos_y) != 3){
+            if(fscanf(f, " %999[^;];%f;%f ", nombre, &pos_x, &pos_y) != 3){
                 printf("Se esperaba que la linea tenga 3 campos: nombre;posx;posy en el archivo %s\n", entrada);
                 break;
             }
@@ -108,7 +108,7 @@ void mostrar_ascendente(TCiudad *ciudades, int cantidad, float actual_x, float a
     i = 0;
     for(e = cp_eliminar(ccp); e != ELE_NULO; e = cp_eliminar(ccp)){
         nombre = ((TCiudad)e->clave)->nombre;
-        printf("%d. %s.\n", i, nombre);
+        printf("%d. %s.\n", i + 1, nombre);
     }
     cp_destruir(ccp, free_entrada);
 }

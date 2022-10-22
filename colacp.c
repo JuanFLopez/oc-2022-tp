@@ -150,3 +150,71 @@ int cp_insertar(TColaCP cola, TEntrada entr)
 	return TRUE;
 }
 
+static void swap(TNodo a,TNodo b){
+    TNodo aux = NULL;
+    aux = a;
+    a->padre = b->padre;
+    a->hijo_derecho = b->hijo_derecho;
+    a->hijo_izquierdo = b->hijo_izquierdo;
+    a->entrada=b->entrada;
+
+    b->padre=aux->padre;
+    b->hijo_derecho=aux->hijo_derecho;
+    b->hijo_izquierdo = aux->hijo_izquierdo;
+    b->entrada=aux->entrada;
+}
+
+
+TEntrada cp_eliminar(TColaCP cola){ //Agregar control de cola no iniciada más tarde.
+    TNodo aux; TEntrada valor_aux;
+    if(cola->cantidad_elementos==0) return ELE_NULO;
+    if(cola->cantidad_elementos==1) {
+        aux = cola->raiz;
+        free((cola->raiz));
+        cola->raiz= NULL;
+        cola->cantidad_elementos=0;
+        return aux->entrada;
+    }
+    if(cola->cantidad_elementos==2){
+        if(cola->raiz->hijo_derecho!=NULL){
+            aux = cola->raiz;
+            cola->raiz= cola->raiz->hijo_derecho;
+            cola->raiz->padre= NULL;
+        }
+        else{
+            aux = cola->raiz;
+            cola->raiz=cola->raiz->hijo_izquierdo;
+            cola->raiz->padre= NULL;
+        }
+        free(aux);
+        cola->cantidad_elementos--;
+        return aux->entrada;
+    }
+    else{ //Caso general: Cola con 3 o más elementos, utilizo utilizo bubblesort.
+        aux = cola->raiz;
+        valor_aux = aux->entrada;
+        swap(aux,cp_ultimo_nodo_libre(cola->raiz));
+        if(aux->padre->hijo_derecho==aux){
+            aux->padre->hijo_derecho = NULL;
+        }
+        else{
+            aux->padre->hijo_izquierdo = NULL;
+        }
+        //Here goes the bubble.
+        cp_rearmar_abajo(cola, cola->raiz);
+        free(aux);
+        cola->cantidad_elementos--;
+        return valor_aux;
+    }
+
+}
+
+int cp_cantidad(TColaCP cola){ return cola->cantidad_elementos;} //Retorna la cantidad de entradas en la Cola
+
+void cp_destruir(TColaCP cola, void(*fEliminar)(TEntrada)){ //How to boom?
+    int i;
+    for(i= cola->cantidad_elementos;i>0;i--){
+        cp_eliminar(cola);
+    }
+    free(cola);
+}

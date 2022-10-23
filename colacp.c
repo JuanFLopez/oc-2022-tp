@@ -16,13 +16,14 @@ static void cp_rearmar_abajo(TColaCP cola, TNodo nodo){
     TEntrada aux = NULL;
     TNodo mayor = NULL;
 
-    if(nodo->hijo_izquierdo && cola->comparador(nodo->hijo_izquierdo->entrada, nodo->entrada) > 0){
-        mayor = nodo->hijo_izquierdo;
-    }
-    else if(nodo->hijo_derecho && cola->comparador(nodo->hijo_derecho->entrada, nodo->entrada) > 0){
+    mayor = nodo;
+    if(nodo->hijo_derecho && cola->comparador(nodo->hijo_derecho->entrada, mayor->entrada) > 0){
         mayor = nodo->hijo_derecho;
     }
-    if(mayor != NULL){
+    if(nodo->hijo_izquierdo && cola->comparador(nodo->hijo_izquierdo->entrada, mayor->entrada) > 0){
+        mayor = nodo->hijo_izquierdo;
+    }
+    if(mayor != nodo){
         aux = nodo->entrada;
         nodo->entrada = mayor->entrada;
         mayor->entrada = aux;
@@ -204,7 +205,6 @@ TEntrada cp_eliminar(TColaCP cola){ //Agregar control de cola no iniciada más ta
         cola->cantidad_elementos--;
         return valor_aux;
     }
-
 }
 
 int cp_cantidad(TColaCP cola){ return cola->cantidad_elementos;} //Retorna la cantidad de entradas en la Cola
@@ -212,8 +212,7 @@ int cp_cantidad(TColaCP cola){ return cola->cantidad_elementos;} //Retorna la ca
 void cp_destruir(TColaCP cola, void(*fEliminar)(TEntrada)){ //How to boom?
     int i;
     for(i= cola->cantidad_elementos;i>0;i--){
-        cp_eliminar(cola);
+        fEliminar(cp_eliminar(cola));
     }
     free(cola);
 }
-

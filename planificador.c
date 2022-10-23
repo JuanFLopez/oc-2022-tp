@@ -105,10 +105,12 @@ void mostrar_ascendente(TCiudad *ciudades, int cantidad, float actual_x, float a
         e = crear_entrada(ciudades[i], fabs(actual_x - ciudades[i]->pos_x) + fabs(actual_y - ciudades[i]->pos_y));
         cp_insertar(ccp, e);
     }
-    i = 0;
+    i = 1;
     for(e = cp_eliminar(ccp); e != ELE_NULO; e = cp_eliminar(ccp)){
         nombre = ((TCiudad)e->clave)->nombre;
-        printf("%d. %s.\n", i + 1, nombre);
+        printf("%d. %s.\n", i, nombre);
+        free_entrada(e);
+        i++;
     }
     cp_destruir(ccp, free_entrada);
 }

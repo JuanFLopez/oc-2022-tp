@@ -115,6 +115,64 @@ void mostrar_ascendente(TCiudad *ciudades, int cantidad, float actual_x, float a
     cp_destruir(ccp, free_entrada);
 }
 
+void mostrar_descendente(TCiudad *ciudades, int cantidad, float actual_x, float actual_y){
+    TColaCP ccp;
+    TEntrada e;
+    int i;
+    char *nombre;
+
+    ccp = crear_cola_cp(comparar_mayor);
+    for(i = 0; i < cantidad; i++){
+        e = crear_entrada(ciudades[i], fabs(actual_x - ciudades[i]->pos_x) + fabs(actual_y - ciudades[i]->pos_y));
+        cp_insertar(ccp, e);
+    }
+    i = 1;
+    for(e = cp_eliminar(ccp); e != ELE_NULO; e = cp_eliminar(ccp)){
+        nombre = ((TCiudad)e->clave)->nombre;
+        printf("%d. %s.\n", i, nombre);
+        free_entrada(e);
+        i++;
+    }
+    cp_destruir(ccp, free_entrada);
+}
+
+void reducir_horas_manejo(TCiudad *ciudades, int cantidad, float actual_x, float actual_y){
+    int horas_de_viaje;
+    TColaCP ccp;
+    TEntrada e;
+    int i,j;
+    char *nombre;
+    int *usados;
+
+    usados = calloc(cantidad, sizeof(int));
+    horas_de_viaje = 0;
+    for(j=0; j < cantidad; j++){
+        ccp = crear_cola_cp(comparar_menor);
+        for(i = 0; i < cantidad; i++){
+            if(usados[i] == 0){
+                e = crear_entrada(ciudades[i], fabs(actual_x - ciudades[i]->pos_x) + fabs(actual_y - ciudades[i]->pos_y));
+                cp_insertar(ccp, e);
+            }
+        }
+        e = cp_eliminar(ccp);
+        for(i=0; i<cantidad; i++){
+            if(ciudades[i]==e->clave){
+                usados[i]=1;
+            }
+        }
+        actual_x = ((TCiudad)e->clave)->pos_x;
+        actual_y = ((TCiudad)e->clave)->pos_y;
+        horas_de_viaje+=*(float*) e->valor;
+        nombre = ((TCiudad)e->clave)->nombre;
+        printf("%d. %s.\n", j+1, nombre);
+        free_entrada(e);
+        cp_destruir(ccp,free_entrada);
+    }
+    free(usados);
+
+    printf("Total recorrido: %d.\n",horas_de_viaje);
+}
+
 void menu(TCiudad *ciudades, int cantidad, float actual_x, float actual_y)
 {
     int opcion = 0;
@@ -131,10 +189,10 @@ void menu(TCiudad *ciudades, int cantidad, float actual_x, float actual_y)
                 mostrar_ascendente(ciudades, cantidad, actual_x, actual_y);
                 break;
             case 2:
-                //mostrar_descendete(ciudades, cantidad, actual_x, actual_y);
+                mostrar_descendente(ciudades, cantidad, actual_x, actual_y);
                 break;
             case 3:
-                //reducir_horas_manejo(ciudades, cantidad, actual_x, actual_y);
+                reducir_horas_manejo(ciudades, cantidad, actual_x, actual_y);
                 break;
             case 4:
                 printf("Saliendo...\n");

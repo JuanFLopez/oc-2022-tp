@@ -11,9 +11,15 @@ TColaCP crear_cola_cp(int (*f)(TEntrada, TEntrada)){
 
     return cola;
 }
+static void swap(TNodo a,TNodo b){ //Intercambia dos entradas de nodos en la cola
+    TEntrada aux;
+    aux = a->entrada;
+    a->entrada=b->entrada;
+    b->entrada=aux;
+}
 
 static void cp_rearmar_abajo(TColaCP cola, TNodo nodo){
-    TEntrada aux = NULL;
+
     TNodo mayor = NULL;
 
     mayor = nodo;
@@ -24,11 +30,17 @@ static void cp_rearmar_abajo(TColaCP cola, TNodo nodo){
         mayor = nodo->hijo_izquierdo;
     }
     if(mayor != nodo){
-        aux = nodo->entrada;
-        nodo->entrada = mayor->entrada;
-        mayor->entrada = aux;
+        swap(nodo,mayor);
         cp_rearmar_abajo(cola, mayor);
     }
+}
+
+static int cp_altura(const TNodo nodo){
+    if(nodo == NULL){
+        return 0;
+    }
+
+    return 1 + cp_altura(nodo->hijo_izquierdo);
 }
 
 static int cp_altura_fila_completa(const TNodo nodo){
@@ -38,6 +50,25 @@ static int cp_altura_fila_completa(const TNodo nodo){
 
     //el arbol se completa de izquierda a derecha
     return 1 + cp_altura_fila_completa(nodo->hijo_derecho);
+}
+
+static TNodo cp_ultimo_nodo_insertado(TNodo nodo){ //Función que busca y retorna el último nodo insertado en la cola.
+    int altura_derecho;
+    int altura_izquierdo;
+
+    if(nodo->hijo_izquierdo == NULL){
+        return nodo;
+    }
+
+    altura_izquierdo = cp_altura(nodo->hijo_izquierdo);
+    altura_derecho = cp_altura(nodo->hijo_derecho);
+
+    if(altura_derecho < altura_izquierdo){
+        return cp_ultimo_nodo_insertado(nodo->hijo_izquierdo);
+    }
+    else{
+        return cp_ultimo_nodo_insertado(nodo->hijo_derecho);
+    }
 }
 
 static TNodo cp_ultimo_nodo_libre(TNodo nodo){
@@ -103,12 +134,10 @@ static TNodo cp_ultimo_nodo_libre(TNodo nodo){
 }
 
 static void cp_rearmar_arriba(TColaCP cola, TNodo nodo){
-    TEntrada aux = NULL;
+
 
     if(nodo->padre != NULL && cola->comparador(nodo->entrada, nodo->padre->entrada) > 0){
-        aux = nodo->entrada;
-        nodo->entrada = nodo->padre->entrada;
-        nodo->padre->entrada = aux;
+        swap(nodo,nodo->padre);
         cp_rearmar_arriba(cola, nodo->padre);
     }
 }
@@ -149,30 +178,16 @@ int cp_insertar(TColaCP cola, TEntrada entr){
     return TRUE;
 }
 
-static void swap(TNodo a,TNodo b){
-    TNodo aux = NULL;
-    aux = a;
-    a->padre = b->padre;
-    a->hijo_derecho = b->hijo_derecho;
-    a->hijo_izquierdo = b->hijo_izquierdo;
-    a->entrada=b->entrada;
-
-    b->padre=aux->padre;
-    b->hijo_derecho=aux->hijo_derecho;
-    b->hijo_izquierdo = aux->hijo_izquierdo;
-    b->entrada=aux->entrada;
-}
-
-
 TEntrada cp_eliminar(TColaCP cola){ //Agregar control de cola no iniciada más tarde.
     TNodo aux; TEntrada valor_aux;
     if(cola->cantidad_elementos==0) return ELE_NULO;
     if(cola->cantidad_elementos==1) {
         aux = cola->raiz;
+        valor_aux = aux->entrada;
         free((cola->raiz));
         cola->raiz= NULL;
         cola->cantidad_elementos=0;
-        return aux->entrada;
+        return valor_aux;
     }
     if(cola->cantidad_elementos==2){
         if(cola->raiz->hijo_derecho!=NULL){
@@ -185,21 +200,22 @@ TEntrada cp_eliminar(TColaCP cola){ //Agregar control de cola no iniciada más ta
             cola->raiz=cola->raiz->hijo_izquierdo;
             cola->raiz->padre= NULL;
         }
+        valor_aux = aux->entrada;
         free(aux);
         cola->cantidad_elementos--;
-        return aux->entrada;
+        return valor_aux;
     }
-    else{ //Caso general: Cola con 3 o más elementos, utilizo utilizo bubblesort.
-        aux = cola->raiz;
-        valor_aux = aux->entrada;
-        swap(aux,cp_ultimo_nodo_libre(cola->raiz));
+    else{ //Caso general: Cola con 3 o más elementos, utilizo bubblesort luego de swappear la raiz con el último insertado.
+        aux = cp_ultimo_nodo_insertado(cola->raiz);
+        valor_aux = cola->raiz->entrada;
+        swap(aux,cola->raiz);
         if(aux->padre->hijo_derecho==aux){
             aux->padre->hijo_derecho = NULL;
         }
         else{
             aux->padre->hijo_izquierdo = NULL;
         }
-        //Here goes the bubble.
+        //Realizo burbujeo para reordenar la cola_cp.
         cp_rearmar_abajo(cola, cola->raiz);
         free(aux);
         cola->cantidad_elementos--;
